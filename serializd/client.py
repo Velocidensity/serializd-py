@@ -5,7 +5,7 @@ from typing import Type
 import httpx
 
 from serializd.consts import APP_ID, AUTH_COOKIE_NAME, BASE_URL, COOKIE_DOMAIN, FRONT_PAGE_URL
-from serializd.exceptions import InvalidTokenError, LoginError, ParseError, RequestError, SerializdError
+from serializd.exceptions import InvalidTokenError, LoginError, SerializdError
 
 
 class SerializdClient:
@@ -29,9 +29,7 @@ class SerializdClient:
             check: Enable checking token validity (default: true)
 
         Raises:
-            RequestError: HTTP request not successful
-            ParseError: JSON parse failure error
-            InvalidTokenError: if check is enabled and provided access token is invalid
+            InvalidTokenError: If check is enabled and provided access token is invalid
         """
         if check and not self.check_token(access_token):
             self.logger.error('Provided token is invalid!')
@@ -42,6 +40,32 @@ class SerializdClient:
             value=access_token,
             domain=COOKIE_DOMAIN
         )
+
+    def check_token(self, access_token: str) -> bool:
+        """
+        Checks whether given access token is still valid
+
+        Args:
+            access_token: User access token
+
+        Returns:
+            Token validity status.
+
+        Raises:
+            SerializdError: Serializd returned an error
+        """
+        self.logger.info('Checking token validity')
+        resp = self.session.post(
+            '/validateauthtoken',
+            json={'token': access_token}
+        )
+        resp_json = self._parse_response(resp)
+        return resp_json['isValid']
+
+    @property
+    def access_token(self) -> str | None:
+        """Serializd user access token"""
+        return self.session.cookies.get(AUTH_COOKIE_NAME)
 
     def login(self, email: str, password: str) -> str:
         """
@@ -55,11 +79,7 @@ class SerializdClient:
             Access token.
 
         Raises:
-            RequestError: HTTP request not successful
-            ParseError: JSON parse failure error
-            InvalidEmailError: if provided email is invalid
-            InvalidPasswordError: if provided password is invalid
-            LoginError: if an unexpected login error happens
+            LoginError: Failed to log in
         """
 
         resp = self.session.post(
@@ -76,34 +96,257 @@ class SerializdClient:
         self.load_token(resp_json['token'], check=False)
         return resp_json['token']
 
-    def check_token(self, access_token: str) -> bool:
-        """Checks whether given access token is still valid
+    def get_show(self, show_id: int) -> dict:
+        """
+        Fetches and returns show information
 
         Args:
-            access_token: User access token
+            show_id: TMDB show ID
 
         Returns:
-            Token validity status.
+            Show information as a dict.
 
         Raises:
-            RequestError: HTTP request not successful
-            ParseError: JSON parse failure error
+            SerializdError: Serializd returned an error
         """
-        self.logger.info('Checking token validity')
-        resp = self.session.post(
-            '/validateauthtoken',
-            json={'token': access_token}
+        resp = self.session.get(f'/show/{show_id}')
+        if not resp.is_success:
+            self.logger.error('Failed to fetch show information for show ID %d!', show_id)
+
+        return self._parse_response(resp)
+
+    def get_season(self, show_id: int, season_number: int) -> dict:
+        """
+        Fetches and returns season information
+
+        Args:
+            show_id: TMDB show ID
+            season_number: Season number
+
+        Returns:
+            Season information as a dict.
+
+        Raises:
+            SerializdError: Serializd returned an error
+        """
+        resp = self.session.get(f'/show/{show_id}/season/{season_number}')
+        if not resp.is_success:
+            self.logger.error(
+                'Failed to fetch season information for show ID %d, season %02d!',
+                show_id, season_number
+            )
+
+        return self._parse_response(resp)
+
+    def log_show(self, show_id: int) -> bool:
+        """
+        Adds a given show (all seasons) to the user's watched list
+
+        Args:
+            show_id: TMDB show ID
+
+        Returns:
+            Success status.
+
+        Raises:
+            SerializdError: Serializd returned an error
+        """
+        show_info = self.get_show(show_id)
+        return self.log_seasons_by_ids(
+            show_id=show_id,
+            season_ids=[season['seasonId'] for season in show_info['seasons']]
         )
-        resp_json = self._parse_response(resp)
-        return resp_json['isValid']
 
-    @property
-    def access_token(self) -> str | None:
-        """Serializd user access token"""
-        return self.session.cookies.get(AUTH_COOKIE_NAME)
+    def unlog_show(self, show_id: int) -> bool:
+        """
+        Removes a given show (all seasons) from the user's watched list
 
-    def _parse_response(self, resp: httpx.Response, exception: Type[SerializdError] = RequestError) -> dict:
-        """Reads, parses and checks a HTTP response
+        Args:
+            show_id: TMDB show ID
+
+        Returns:
+            Success status.
+
+        Raises:
+            SerializdError: Serializd returned an error
+        """
+        show_info = self.get_show(show_id)
+        return self.unlog_seasons_by_ids(
+            show_id=show_id,
+            season_ids=[season['seasonId'] for season in show_info['seasons']]
+        )
+
+    def log_seasons_by_ids(self, show_id: int, season_ids: list[int]) -> bool:
+        """
+        Adds given seasons (by ID) to the user's watched list
+
+        Args:
+            show_id: TMDB show ID
+            season_ids: List of TMDB season ID
+
+        Returns:
+            Success status.
+
+        Raises:
+            SerializdError: Serializd returned an error
+        """
+        resp = self.session.post(
+            '/api/watched/watched_v2',
+            json={
+                'season_ids': season_ids,
+                'show_id': show_id
+            }
+        )
+        if not resp.is_success:
+            self.logger.error(
+                'Failed to log seasons %s of show ID %d as watched!',
+                season_ids, show_id
+            )
+            self._parse_response(resp)
+            return False
+
+        return True
+
+    def unlog_seasons_by_ids(self, show_id: int, season_ids: list[int]) -> bool:
+        """
+        Removes given seasons (by ID) from the user's watched list
+
+        Args:
+            show_id: TMDB show ID
+            season_ids: List of TMDB season ID
+
+        Returns:
+            Success status.
+
+        Raises:
+            SerializdError: Serializd returned an error
+        """
+        resp = self.session.post(
+            '/api/watched/remove_v2',
+            json={
+                'season_ids': season_ids,
+                'show_id': show_id
+            }
+        )
+        if not resp.is_success:
+            self.logger.error(
+                'Failed to unlog seasons %s of show ID %d as watched!',
+                season_ids, show_id
+            )
+            self._parse_response(resp)
+            return False
+
+        return True
+
+    def log_season_by_id(self, show_id: int, season_id: int) -> bool:
+        """
+        Adds a given season (by ID) to the user's watched list
+
+        Args:
+            show_id: TMDB show ID
+            season_id: TMDB season ID
+
+        Returns:
+            Success status.
+
+        Raises:
+            SerializdError: Serializd returned an error
+        """
+        return self.log_seasons_by_ids(show_id=show_id, season_ids=[season_id])
+
+    def unlog_season_by_id(self, show_id: int, season_id: int) -> bool:
+        """
+        Removes a given season (by ID) from the user's watched list
+
+        Args:
+            show_id: TMDB show ID
+            season_id: TMDB season ID
+
+        Returns:
+            Success status.
+
+        Raises:
+            SerializdError: Serializd returned an error
+        """
+        return self.unlog_seasons_by_ids(show_id=show_id, season_ids=[season_id])
+
+    def log_seasons_by_numbers(self, show_id: int, season_numbers: list[int]) -> bool:
+        """
+        Adds given seasons (by numbers) to the user's watched list
+
+        Args:
+            show_id: TMDB show ID
+            season_numbers: List of season numbers
+
+        Returns:
+            Success status.
+
+        Raises:
+            SerializdError: Serializd returned an error
+        """
+        show_info = self.get_show(show_id)
+        season_ids = [
+            season['seasonId'] for season in show_info['seasons']
+            if season['seasonNumber'] in season_numbers
+        ]
+        return self.log_seasons_by_ids(show_id=show_id, season_ids=season_ids)
+
+    def unlog_seasons_by_numbers(self, show_id: int, season_numbers: list[int]) -> bool:
+        """
+        Removes given seasons (by numbers) from the user's watched list
+
+        Args:
+            show_id: TMDB show ID
+            season_numbers: List of season numbers
+
+        Returns:
+            Success status.
+
+        Raises:
+            SerializdError: Serializd returned an error
+        """
+        show_info = self.get_show(show_id)
+        season_ids = [
+            season['seasonId'] for season in show_info['seasons']
+            if season['seasonNumber'] in season_numbers
+        ]
+        return self.unlog_seasons_by_ids(show_id=show_id, season_ids=season_ids)
+
+    def log_season_by_number(self, show_id: int, season_number: int) -> bool:
+        """
+        Adds a given season (by number) to the user's watched list
+
+        Args:
+            show_id: TMDB show ID
+            season_number: Season number
+
+        Returns:
+            Success status.
+
+        Raises:
+            SerializdError: Serializd returned an error
+        """
+        return self.log_seasons_by_numbers(show_id=show_id, season_numbers=[season_number])
+
+    def unlog_season_by_number(self, show_id: int, season_number: int) -> bool:
+        """
+        Removes a given season (by number) from the user's watched list
+
+        Args:
+            show_id: TMDB show ID
+            season_number: Season number
+
+        Returns:
+            Success status.
+
+        Raises:
+            SerializdError: Serializd returned an error
+        """
+        return self.unlog_seasons_by_numbers(show_id=show_id, season_numbers=[season_number])
+
+    def _parse_response(self, resp: httpx.Response, exception: Type[SerializdError] = SerializdError) -> dict:
+        """
+        Reads, parses and checks a HTTP response
 
         Checks output for JSON message errors, and returns parsed response.
 
@@ -114,22 +357,20 @@ class SerializdClient:
             JSON response.
 
         Raises:
-            RequestError: HTTP request not successful
-            ParseError: JSON parse failure error
-            ResponseError: error originating from the "message" field in response
+            json.decoder.JSONDecodeError: Failed to parse response as JSON
+            SerializdError: Serializd returned an error
         """
         try:
             resp_json = resp.json()
-        except json.decoder.JSONDecodeError:
+        except json.decoder.JSONDecodeError as exc:
             self.logger.debug('Failed to parse response as JSON')
             self.logger.debug(resp.text)
-            raise ParseError
-
-        if message := resp_json.get('message'):
-            self.logger.error('Error message: "%s"', message)
-            raise exception(message)
+            raise exc from exc
 
         if not resp.is_success:
-            raise RequestError
+            if message := resp_json.get('message'):
+                self.logger.error('Error message: "%s"', message)
+                raise exception(message)
+            raise exception(f'Request returned status code {resp.status_code}')
 
         return resp_json
