@@ -191,7 +191,7 @@ class SerializdClient:
             SerializdError: Serializd returned an error
         """
         resp = self.session.post(
-            '/api/watched/watched_v2',
+            '/watched_v2',
             json={
                 'season_ids': season_ids,
                 'show_id': show_id
@@ -222,7 +222,7 @@ class SerializdClient:
             SerializdError: Serializd returned an error
         """
         resp = self.session.post(
-            '/api/watched/remove_v2',
+            '/watched/remove_v2',
             json={
                 'season_ids': season_ids,
                 'show_id': show_id
@@ -286,7 +286,7 @@ class SerializdClient:
         """
         show_info = self.get_show(show_id)
         season_ids = [
-            season['seasonId'] for season in show_info['seasons']
+            season['id'] for season in show_info['seasons']
             if season['seasonNumber'] in season_numbers
         ]
         return self.log_seasons_by_ids(show_id=show_id, season_ids=season_ids)
@@ -307,7 +307,7 @@ class SerializdClient:
         """
         show_info = self.get_show(show_id)
         season_ids = [
-            season['seasonId'] for season in show_info['seasons']
+            season['id'] for season in show_info['seasons']
             if season['seasonNumber'] in season_numbers
         ]
         return self.unlog_seasons_by_ids(show_id=show_id, season_ids=season_ids)
