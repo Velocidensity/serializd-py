@@ -44,3 +44,6 @@ poetry install --with=docs
 cd docs
 make html
 ```
+
+# Disclaimer
+This project and its authors are not affiliated with Serializd. The API used by this package, based on official web and Android apps, is not official and is subject to change without notice.
