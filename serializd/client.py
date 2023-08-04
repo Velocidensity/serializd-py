@@ -238,38 +238,6 @@ class SerializdClient:
 
         return True
 
-    def log_season_by_id(self, show_id: int, season_id: int) -> bool:
-        """
-        Adds a given season (by ID) to the user's watched list
-
-        Args:
-            show_id: TMDB show ID
-            season_id: TMDB season ID
-
-        Returns:
-            Success status.
-
-        Raises:
-            SerializdError: Serializd returned an error
-        """
-        return self.log_seasons_by_ids(show_id=show_id, season_ids=[season_id])
-
-    def unlog_season_by_id(self, show_id: int, season_id: int) -> bool:
-        """
-        Removes a given season (by ID) from the user's watched list
-
-        Args:
-            show_id: TMDB show ID
-            season_id: TMDB season ID
-
-        Returns:
-            Success status.
-
-        Raises:
-            SerializdError: Serializd returned an error
-        """
-        return self.unlog_seasons_by_ids(show_id=show_id, season_ids=[season_id])
-
     def log_seasons_by_numbers(self, show_id: int, season_numbers: list[int]) -> bool:
         """
         Adds given seasons (by numbers) to the user's watched list
@@ -311,38 +279,6 @@ class SerializdClient:
             if season['seasonNumber'] in season_numbers
         ]
         return self.unlog_seasons_by_ids(show_id=show_id, season_ids=season_ids)
-
-    def log_season_by_number(self, show_id: int, season_number: int) -> bool:
-        """
-        Adds a given season (by number) to the user's watched list
-
-        Args:
-            show_id: TMDB show ID
-            season_number: Season number
-
-        Returns:
-            Success status.
-
-        Raises:
-            SerializdError: Serializd returned an error
-        """
-        return self.log_seasons_by_numbers(show_id=show_id, season_numbers=[season_number])
-
-    def unlog_season_by_number(self, show_id: int, season_number: int) -> bool:
-        """
-        Removes a given season (by number) from the user's watched list
-
-        Args:
-            show_id: TMDB show ID
-            season_number: Season number
-
-        Returns:
-            Success status.
-
-        Raises:
-            SerializdError: Serializd returned an error
-        """
-        return self.unlog_seasons_by_numbers(show_id=show_id, season_numbers=[season_number])
 
     def _parse_response(self, resp: httpx.Response, exception: Type[SerializdError] = SerializdError) -> dict:
         """
