@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "serializd-py"
-version = "0.0.1"
+version = "0.0.2"
 description = "Python API library for Serializd.com"
 authors = ["Velocidensity"]
 license = "MIT"
