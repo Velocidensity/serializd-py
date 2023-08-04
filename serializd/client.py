@@ -238,13 +238,17 @@ class SerializdClient:
 
         return True
 
-    def log_seasons_by_numbers(self, show_id: int, season_numbers: list[int]) -> bool:
+    def log_episodes(self, show_id: int, season_id: int, episode_numbers: list[int]) -> bool:
         """
-        Adds given seasons (by numbers) to the user's watched list
+        Adds given episodes (by numbers) to the user's watched list
+
+        Note: This does not mark the season as watched,
+              even if all episodes are provided
 
         Args:
             show_id: TMDB show ID
-            season_numbers: List of season numbers
+            season_id: TMDB season ID
+            episode_numbers: List of episodes numbers
 
         Returns:
             Success status.
@@ -252,20 +256,36 @@ class SerializdClient:
         Raises:
             SerializdError: Serializd returned an error
         """
-        show_info = self.get_show(show_id)
-        season_ids = [
-            season['id'] for season in show_info['seasons']
-            if season['seasonNumber'] in season_numbers
-        ]
-        return self.log_seasons_by_ids(show_id=show_id, season_ids=season_ids)
+        resp = self.session.post(
+            '/episode_log/add',
+            json={
+                'episode_numbers': episode_numbers,
+                'season_id': season_id,
+                'show_id': show_id,
+                'should_get_next_episode': False
+            }
+        )
+        if not resp.is_success:
+            self.logger.error(
+                'Failed to log epsiodes of season ID %d (show ID %d) as watched!',
+                episode_numbers, season_id, show_id
+            )
+            self._parse_response(resp)
+            return False
 
-    def unlog_seasons_by_numbers(self, show_id: int, season_numbers: list[int]) -> bool:
+        return True
+
+    def unlog_episodes(self, show_id: int, season_id: int, episode_numbers: list[int]) -> bool:
         """
-        Removes given seasons (by numbers) from the user's watched list
+        Removes given episodes (by numbers) from the user's watched list
+
+        Note: This does not unmark the season as watched,
+              even if all episodes are provided
 
         Args:
             show_id: TMDB show ID
-            season_numbers: List of season numbers
+            season_id: TMDB season ID
+            episode_numbers: List of episodes numbers
 
         Returns:
             Success status.
@@ -273,12 +293,23 @@ class SerializdClient:
         Raises:
             SerializdError: Serializd returned an error
         """
-        show_info = self.get_show(show_id)
-        season_ids = [
-            season['id'] for season in show_info['seasons']
-            if season['seasonNumber'] in season_numbers
-        ]
-        return self.unlog_seasons_by_ids(show_id=show_id, season_ids=season_ids)
+        resp = self.session.post(
+            '/episode_log/remove',
+            json={
+                'episode_numbers': episode_numbers,
+                'season_id': season_id,
+                'show_id': show_id,
+            }
+        )
+        if not resp.is_success:
+            self.logger.error(
+                'Failed to unlog epsiodes of season ID %d (show ID %d) as watched!',
+                episode_numbers, season_id, show_id
+            )
+            self._parse_response(resp)
+            return False
+
+        return True
 
     def _parse_response(self, resp: httpx.Response, exception: Type[SerializdError] = SerializdError) -> dict:
         """

@@ -4,7 +4,7 @@ Python API library for Serializd.com
 # Features
 - User authentication
 - Fetching show/season information
-- Logging shows and individual seasons as watched
+- Logging shows, seasons, and individual episodes as watched
 - Full typing and documentation
 - HTTP/2 with httpx
 
