@@ -152,7 +152,7 @@ class SerializdClient:
             SerializdError: Serializd returned an error
         """
         show_info = self.get_show(show_id)
-        return self.log_seasons_by_ids(
+        return self.log_seasons(
             show_id=show_id,
             season_ids=[season['seasonId'] for season in show_info['seasons']]
         )
@@ -171,12 +171,12 @@ class SerializdClient:
             SerializdError: Serializd returned an error
         """
         show_info = self.get_show(show_id)
-        return self.unlog_seasons_by_ids(
+        return self.unlog_seasons(
             show_id=show_id,
             season_ids=[season['seasonId'] for season in show_info['seasons']]
         )
 
-    def log_seasons_by_ids(self, show_id: int, season_ids: list[int]) -> bool:
+    def log_seasons(self, show_id: int, season_ids: list[int]) -> bool:
         """
         Adds given seasons (by ID) to the user's watched list
 
@@ -207,7 +207,7 @@ class SerializdClient:
 
         return True
 
-    def unlog_seasons_by_ids(self, show_id: int, season_ids: list[int]) -> bool:
+    def unlog_seasons(self, show_id: int, season_ids: list[int]) -> bool:
         """
         Removes given seasons (by ID) from the user's watched list
 
