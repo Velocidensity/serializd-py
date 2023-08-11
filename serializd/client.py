@@ -32,7 +32,7 @@ class SerializdClient:
             InvalidTokenError: If check is enabled and provided access token is invalid
         """
         if check and not self.check_token(access_token):
-            self.logger.error('Provided token is invalid!')
+            self.logger.error('Provided Serializd token is invalid!')
             raise InvalidTokenError
 
         self.session.cookies.set(
@@ -54,7 +54,7 @@ class SerializdClient:
         Raises:
             SerializdError: Serializd returned an error
         """
-        self.logger.info('Checking token validity')
+        self.logger.info('Checking Serializd token validity')
         resp = self.session.post(
             '/validateauthtoken',
             json={'token': access_token}
@@ -90,7 +90,7 @@ class SerializdClient:
             }
         )
         if not resp.is_success:
-            self.logger.error('Failed to log in using provided credentials!')
+            self.logger.error('Failed to log in to Serializd using provided credentials!')
         resp_json = self._parse_response(resp, exception=LoginError)
 
         self.load_token(resp_json['token'], check=False)
