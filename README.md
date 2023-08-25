@@ -11,39 +11,7 @@ Python API library for Serializd.com
 # Documentation
 https://velocidensity.github.io/serializd-py/
 
-# Usage example
-```py
->>> from serializd import SerializdClient
->>> client = SerializdClient()
->>> client.login(email="EMAIL", password="PASSWORD")  # optional for get_show()
->>> client.get_show(114472)
-{'id': 114472, 'name': ...
-```
-
-# Installation
-```
-pip install git+https://github.com/Velocidensity/serializd-py
-```
-Optionally with a virtual environment of your choice.
-
-# Development
-Development environment is managed via poetry.
-
-```
-poetry install --with=dev
-```
-
-To install pre-commit hooks, run:
-```
-pre-commit install
-```
-
-To build docs, install sphinx and furo theme with poetry, and then use make.
-```
-poetry install --with=docs
-cd docs
-make html
-```
+Refer to the documentation for installation, usage and development instructions.
 
 # Disclaimer
 This project and its authors are not affiliated with Serializd. The API used by this package, based on official web and Android apps, is not official and is subject to change without notice.
