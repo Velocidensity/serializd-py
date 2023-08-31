@@ -152,5 +152,8 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+# ruff
+.ruff_cache/
+
 # Serializd
 test.py
