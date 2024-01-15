@@ -6,6 +6,15 @@ import httpx
 
 from serializd.consts import APP_ID, AUTH_COOKIE_NAME, BASE_URL, COOKIE_DOMAIN, FRONT_PAGE_URL
 from serializd.exceptions import InvalidTokenError, LoginError, SerializdError
+from serializd.models.actions import LogEpisodesRequest, LogSeasonsRequest, UnlogEpisodesRequest
+from serializd.models.auth import (
+    LoginRequest,
+    LoginResponse,
+    ValidateAuthTokenRequest,
+    ValidateAuthTokenResponse
+)
+from serializd.models.season import SeasonResponse
+from serializd.models.show import ShowResponse
 
 
 class SerializdClient:
@@ -41,7 +50,7 @@ class SerializdClient:
             domain=COOKIE_DOMAIN
         )
 
-    def check_token(self, access_token: str) -> bool:
+    def check_token(self, access_token: str) -> ValidateAuthTokenResponse:
         """
         Checks whether given access token is still valid
 
@@ -55,19 +64,19 @@ class SerializdClient:
             SerializdError: Serializd returned an error
         """
         self.logger.info('Checking Serializd token validity')
+        params = ValidateAuthTokenRequest(token=access_token)
         resp = self.session.post(
             '/validateauthtoken',
-            json={'token': access_token}
+            data=params.model_dump_json()
         )
-        resp_json = self._parse_response(resp)
-        return resp_json['isValid']
+        return ValidateAuthTokenResponse(**self._parse_response(resp))
 
     @property
     def access_token(self) -> str | None:
         """Serializd user access token"""
         return self.session.cookies.get(AUTH_COOKIE_NAME)
 
-    def login(self, email: str, password: str) -> str:
+    def login(self, email: str, password: str) -> LoginResponse:
         """
         Logs in into Serializd using provided credentials
 
@@ -82,21 +91,20 @@ class SerializdClient:
             LoginError: Failed to log in
         """
 
+        params = LoginRequest(email=email, password=password)
         resp = self.session.post(
             '/login',
-            json={
-                'email': email,
-                'password': password
-            }
+            json=params.model_dump_json()
         )
         if not resp.is_success:
             self.logger.error('Failed to log in to Serializd using provided credentials!')
-        resp_json = self._parse_response(resp, exception=LoginError)
 
-        self.load_token(resp_json['token'], check=False)
-        return resp_json['token']
+        parsed = LoginResponse(**self._parse_response(resp, exception=LoginError))
+        self.load_token(parsed.token, check=False)
 
-    def get_show(self, show_id: int) -> dict:
+        return parsed
+
+    def get_show(self, show_id: int) -> ShowResponse:
         """
         Fetches and returns show information
 
@@ -113,9 +121,9 @@ class SerializdClient:
         if not resp.is_success:
             self.logger.error('Failed to fetch show information for show ID %d!', show_id)
 
-        return self._parse_response(resp)
+        return ShowResponse(**self._parse_response(resp))
 
-    def get_season(self, show_id: int, season_number: int) -> dict:
+    def get_season(self, show_id: int, season_number: int) -> SeasonResponse:
         """
         Fetches and returns season information
 
@@ -136,7 +144,7 @@ class SerializdClient:
                 show_id, season_number
             )
 
-        return self._parse_response(resp)
+        return SeasonResponse(**self._parse_response(resp))
 
     def log_show(self, show_id: int) -> bool:
         """
@@ -154,7 +162,7 @@ class SerializdClient:
         show_info = self.get_show(show_id)
         return self.log_seasons(
             show_id=show_id,
-            season_ids=[season['seasonId'] for season in show_info['seasons']]
+            season_ids=[season.id for season in show_info.seasons]
         )
 
     def unlog_show(self, show_id: int) -> bool:
@@ -173,7 +181,7 @@ class SerializdClient:
         show_info = self.get_show(show_id)
         return self.unlog_seasons(
             show_id=show_id,
-            season_ids=[season['seasonId'] for season in show_info['seasons']]
+            season_ids=[season.id for season in show_info.seasons]
         )
 
     def log_seasons(self, show_id: int, season_ids: list[int]) -> bool:
@@ -190,12 +198,10 @@ class SerializdClient:
         Raises:
             SerializdError: Serializd returned an error
         """
+        params = LogSeasonsRequest(season_ids=season_ids, show_id=show_id)
         resp = self.session.post(
             '/watched_v2',
-            json={
-                'season_ids': season_ids,
-                'show_id': show_id
-            }
+            data=params.model_dump_json()
         )
         if not resp.is_success:
             self.logger.error(
@@ -221,12 +227,10 @@ class SerializdClient:
         Raises:
             SerializdError: Serializd returned an error
         """
+        params = LogSeasonsRequest(season_ids=season_ids, show_id=show_id)
         resp = self.session.post(
             '/watched/remove_v2',
-            json={
-                'season_ids': season_ids,
-                'show_id': show_id
-            }
+            data=params.model_dump_json()
         )
         if not resp.is_success:
             self.logger.error(
@@ -256,14 +260,14 @@ class SerializdClient:
         Raises:
             SerializdError: Serializd returned an error
         """
+        params = LogEpisodesRequest(
+            episode_numbers=episode_numbers,
+            season_id=season_id,
+            show_id=show_id
+        )
         resp = self.session.post(
             '/episode_log/add',
-            json={
-                'episode_numbers': episode_numbers,
-                'season_id': season_id,
-                'show_id': show_id,
-                'should_get_next_episode': False
-            }
+            data=params.model_dump_json()
         )
         if not resp.is_success:
             self.logger.error(
@@ -293,13 +297,14 @@ class SerializdClient:
         Raises:
             SerializdError: Serializd returned an error
         """
+        params = UnlogEpisodesRequest(
+            episode_numbers=episode_numbers,
+            season_id=season_id,
+            show_id=show_id
+        )
         resp = self.session.post(
             '/episode_log/remove',
-            json={
-                'episode_numbers': episode_numbers,
-                'season_id': season_id,
-                'show_id': show_id,
-            }
+            data=params.model_dump_json()
         )
         if not resp.is_success:
             self.logger.error(
@@ -327,6 +332,7 @@ class SerializdClient:
             json.decoder.JSONDecodeError: Failed to parse response as JSON
             SerializdError: Serializd returned an error
         """
+        print(resp.text)
         try:
             resp_json = resp.json()
         except json.decoder.JSONDecodeError as exc:

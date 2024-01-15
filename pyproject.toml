@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "serializd-py"
-version = "0.0.2"
+version = "0.1.0"
 description = "Python API library for Serializd.com"
 authors = ["Velocidensity"]
 license = "MIT"
@@ -10,6 +10,7 @@ packages = [{include = "serializd"}]
 [tool.poetry.dependencies]
 python = "^3.10"
 httpx = "^0.24.1"
+pydantic = "^2.5.3"
 
 [tool.poetry.group.dev]
 optional = true
@@ -26,6 +27,7 @@ ruff = "^0.0.286"
 [tool.poetry.group.docs.dependencies]
 sphinx = "^7.1.0"
 furo = "^2023.7.26"
+autodoc-pydantic = "^2.0.1"
 
 [build-system]
 requires = ["poetry-core"]
@@ -46,13 +48,17 @@ select = [
     "SIM", # flake8-simplify
     "W"    # pycodestyle (Warning)
 ]
-line-length = 120
+line-length = 110
 ignore = [
     "SIM105", # suppressible-exception
 ]
+exclude = [
+    "serializd/models", "docs"
+]
 
 [tool.isort]
-line_length = 120
+line_length = 110
+multi_line_output = 3
 
 [tool.pyright]
 venvPath = [".venv"]

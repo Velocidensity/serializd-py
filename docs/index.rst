@@ -4,9 +4,15 @@ serializd-py
 .. toctree::
    usage
    development
-   api
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Documentation:
+
+.. toctree::
+   client
+   models
+   exceptions
+   :maxdepth: 1
+   :caption: API:
 
 .. toctree::
    :maxdepth: 2
