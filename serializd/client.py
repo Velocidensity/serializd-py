@@ -332,7 +332,6 @@ class SerializdClient:
             json.decoder.JSONDecodeError: Failed to parse response as JSON
             SerializdError: Serializd returned an error
         """
-        print(resp.text)
         try:
             resp_json = resp.json()
         except json.decoder.JSONDecodeError as exc:
