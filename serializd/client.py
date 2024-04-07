@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Type
+from typing import Any, Type
 
 import httpx
 
@@ -94,7 +94,7 @@ class SerializdClient:
         params = LoginRequest(email=email, password=password)
         resp = self.session.post(
             '/login',
-            json=params.model_dump_json()
+            data=params.model_dump_json(),
         )
         if not resp.is_success:
             self.logger.error('Failed to log in to Serializd using provided credentials!')
@@ -316,7 +316,11 @@ class SerializdClient:
 
         return True
 
-    def _parse_response(self, resp: httpx.Response, exception: Type[SerializdError] = SerializdError) -> dict:
+    def _parse_response(
+        self,
+        resp: httpx.Response,
+        exception: Type[SerializdError] = SerializdError
+    ) -> dict[str, Any]:
         """
         Reads, parses and checks a HTTP response
 

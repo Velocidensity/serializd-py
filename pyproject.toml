@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "serializd-py"
-version = "0.1.0"
+version = "0.1.1"
 description = "Python API library for Serializd.com"
 authors = ["Velocidensity"]
 license = "MIT"
@@ -66,3 +66,4 @@ venvPath = [".venv"]
 [tool.mypy]
 pretty = true
 mypy_path = "$MYPY_CONFIG_FILE_DIR/stubs"
+plugins = ["pydantic.mypy"]
