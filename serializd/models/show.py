@@ -8,7 +8,7 @@ from pydantic import BaseModel
 class Network(BaseModel):
     id: int
     name: str
-    logo_path: str
+    logo_path: str | None
     origin_country: str
 
 
@@ -19,11 +19,11 @@ class Genre(BaseModel):
 
 class Season(BaseModel):
     id: int
-    airDate: str
+    airDate: str | None
     episodeCount: int
     name: str
     overview: str
-    posterPath: str
+    posterPath: str | None
     seasonNumber: int
 
 
@@ -32,9 +32,9 @@ class NextEpisodeToAir(BaseModel):
     name: str
     runtime: int
     show_id: int
-    air_date: str
+    air_date: str | None
     overview: str
-    still_path: str
+    still_path: str | None
     vote_count: int
     episode_type: str
     vote_average: float
@@ -49,7 +49,7 @@ class EpisodeToPreview(BaseModel):
     episodeNumber: int
     name: str
     overview: str
-    stillPath: str
+    stillPath: str | None
     seasonNumber: int
 
 
@@ -59,7 +59,7 @@ class ShowResponse(BaseModel):
     tagline: str
     summary: str
     status: str
-    bannerImage: str
+    bannerImage: str | None
     premiereDate: str
     lastAirDate: str
     networks: List[Network]

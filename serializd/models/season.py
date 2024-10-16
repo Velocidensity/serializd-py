@@ -7,11 +7,11 @@ from pydantic import BaseModel
 
 class Episode(BaseModel):
     episodeId: int
-    airDate: str
+    airDate: str | None
     episodeNumber: int
     name: str
     overview: str
-    stillPath: str
+    stillPath: str | None
     seasonNumber: int
 
 
@@ -20,6 +20,6 @@ class SeasonResponse(BaseModel):
     seasonNumber: int
     name: str
     overview: str
-    airDate: str
+    airDate: str | None
     posterPath: str
     episodes: List[Episode]
