@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "serializd-py"
-version = "0.1.2"
+version = "0.1.3"
 description = "Python API library for Serializd.com"
 authors = ["Velocidensity"]
 license = "MIT"
@@ -34,7 +34,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
-select = [
+lint.select = [
     "A",   # flake8-builtins
     "BLE", # flake8-blind-except
     "C4",  # flake8-comprehensions
@@ -48,10 +48,10 @@ select = [
     "SIM", # flake8-simplify
     "W"    # pycodestyle (Warning)
 ]
-line-length = 110
-ignore = [
+lint.ignore = [
     "SIM105", # suppressible-exception
 ]
+line-length = 110
 exclude = [
     "serializd/models", "docs"
 ]
