@@ -5,7 +5,7 @@ from typing import Any, Type
 import httpx
 
 from serializd.consts import APP_ID, AUTH_COOKIE_NAME, BASE_URL, COOKIE_DOMAIN, FRONT_PAGE_URL
-from serializd.exceptions import InvalidTokenError, LoginError, SerializdError
+from serializd.exceptions import EmptySeasonError, InvalidTokenError, LoginError, SerializdError
 from serializd.models.actions import LogEpisodesRequest, LogSeasonsRequest, UnlogEpisodesRequest
 from serializd.models.auth import (
     LoginRequest,
@@ -136,6 +136,7 @@ class SerializdClient:
 
         Raises:
             SerializdError: Serializd returned an error
+            EmptySeasonError: Serializd returned empty season information
         """
         resp = self.session.get(f'/show/{show_id}/season/{season_number}')
         if not resp.is_success:
@@ -144,7 +145,16 @@ class SerializdClient:
                 show_id, season_number
             )
 
-        return SeasonResponse(**self._parse_response(resp))
+        parsed = self._parse_response(resp)
+        if parsed['seasonId'] is None:
+            message = (
+                f'Serializd return empty season information for ID {show_id}, '
+                f'season {season_number:02d} (likely: no episodes)'
+            )
+            self.logger.error(message)
+            raise EmptySeasonError(message)
+
+        return SeasonResponse(**parsed)
 
     def log_show(self, show_id: int) -> bool:
         """

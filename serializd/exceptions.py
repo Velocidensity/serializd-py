@@ -14,3 +14,7 @@ class LoginError(SerializdError):
 
 class InvalidTokenError(SerializdError):
     """Invalid token provided error"""
+
+
+class EmptySeasonError(SerializdError):
+    """Empty season info returned error"""
