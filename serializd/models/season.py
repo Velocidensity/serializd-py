@@ -21,5 +21,5 @@ class SeasonResponse(BaseModel):
     name: str
     overview: str
     airDate: str | None
-    posterPath: str
+    posterPath: str | None
     episodes: List[Episode]
