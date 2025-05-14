@@ -30,7 +30,7 @@ class Season(BaseModel):
 class NextEpisodeToAir(BaseModel):
     id: int
     name: str
-    runtime: int
+    runtime: int | None
     show_id: int
     air_date: str | None
     overview: str
@@ -69,5 +69,5 @@ class ShowResponse(BaseModel):
     numEpisodes: int
     nextEpisodeToAir: NextEpisodeToAir | None
     episodeToPreview: EpisodeToPreview | None
-    episodeRunTime: List[int]
+    episodeRunTime: List[int | None]
     nextEpisodeForUser: Any
