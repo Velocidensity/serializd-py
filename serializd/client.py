@@ -4,7 +4,7 @@ from typing import Any, Type
 
 import httpx
 
-from serializd.consts import APP_ID, AUTH_COOKIE_NAME, BASE_URL, COOKIE_DOMAIN, FRONT_PAGE_URL
+from serializd.consts import APP_ID, BASE_URL, FRONT_PAGE_URL
 from serializd.exceptions import EmptySeasonError, InvalidTokenError, LoginError, SerializdError
 from serializd.models.actions import LogEpisodesRequest, LogSeasonsRequest, UnlogEpisodesRequest
 from serializd.models.auth import (
@@ -28,6 +28,7 @@ class SerializdClient:
             'Referer': FRONT_PAGE_URL,
             'X-Requested-With': APP_ID,
         })
+        self._access_token: str | None = None
 
     def load_token(self, access_token: str, check: bool = True):
         """
@@ -44,11 +45,10 @@ class SerializdClient:
             self.logger.error('Provided Serializd token is invalid!')
             raise InvalidTokenError
 
-        self.session.cookies.set(
-            name=AUTH_COOKIE_NAME,
-            value=access_token,
-            domain=COOKIE_DOMAIN
-        )
+        self._access_token = access_token
+        self.session.headers.update({
+            'Authorization': f'Bearer {self._access_token}',
+        })
 
     def check_token(self, access_token: str) -> ValidateAuthTokenResponse:
         """
@@ -74,7 +74,7 @@ class SerializdClient:
     @property
     def access_token(self) -> str | None:
         """Serializd user access token"""
-        return self.session.cookies.get(AUTH_COOKIE_NAME)
+        return self._access_token
 
     def login(self, email: str, password: str) -> LoginResponse:
         """
