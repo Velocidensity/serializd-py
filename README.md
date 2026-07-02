@@ -15,3 +15,13 @@ Refer to the documentation for installation, usage and development instructions.
 
 # Disclaimer
 This project and its authors are not affiliated with Serializd. The API used by this package, based on official web and Android apps, is not official and is subject to change without notice.
+
+# AI Attribution (Fork Feature)
+
+The diary entry with custom date feature (`log_episode_to_diary()`, `DiaryEntryRequest`) in the `feature/diary-with-date` branch was developed with AI assistance.
+
+- **AI Tool**: Claude Opus 4.5 (Anthropic)
+- **Human Oversight**: All code was reviewed and tested by a human developer
+- **Commits**: AI-assisted commits include the `Co-authored-by: Claude <noreply@anthropic.com>` trailer
+
+This disclosure is provided in accordance with best practices for AI transparency in open source development.
