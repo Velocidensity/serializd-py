@@ -1,37 +1,46 @@
-[tool.poetry]
+[project]
 name = "serializd-py"
 version = "0.1.4"
 description = "Python API library for Serializd.com"
-authors = ["Velocidensity"]
-license = "MIT"
+authors = [{ name = "Velocidensity" }]
+requires-python = ">=3.10,<4"
 readme = "README.md"
-packages = [{include = "serializd"}]
+license = "MIT"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "httpx",
+    "pydantic",
+]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-httpx = "^0.24.1"
-pydantic = "^2.5.3"
+[dependency-groups]
+dev = [
+    "isort",
+    "pre-commit",
+    "mypy",
+    "ruff",
+]
+docs = [
+    "sphinx",
+    "furo",
+    "autodoc-pydantic",
+]
 
-[tool.poetry.group.dev]
-optional = true
+[tool.uv]
 
-[tool.poetry.group.docs]
-optional = true
-
-[tool.poetry.group.dev.dependencies]
-isort = "^5.10.1"
-pre-commit = "^2.20.0"
-mypy = "^0.991"
-ruff = "^0.0.286"
-
-[tool.poetry.group.docs.dependencies]
-sphinx = "^7.1.0"
-furo = "^2023.7.26"
-autodoc-pydantic = "^2.0.1"
+[tool.uv.build-backend]
+module-name = ["serializd"]
+module-root = ""
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv_build>=0.11.2,<0.12.0"]
+build-backend = "uv_build"
 
 [tool.ruff]
 lint.select = [
